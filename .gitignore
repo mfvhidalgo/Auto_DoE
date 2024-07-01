@@ -1,0 +1,6 @@
+# Ignore all Jupyer checkpoints
+**/.ipynb_checkpoints/
+
+# Ignore all temporary files and folders
+~$*.xlsx
+__pycache__
