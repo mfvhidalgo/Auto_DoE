@@ -1,6 +1,8 @@
 #%%
+
+#python -m src.Common_DoEs.py
+
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import dexpy
 import dexpy.factorial
@@ -8,8 +10,20 @@ import dexpy.ccd
 import itertools
 from typing import Dict
 import doepy.build
+import os
+import sys
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+parent_directory = os.path.dirname(current_directory)
+if parent_directory not in sys.path:
+    sys.path.append(parent_directory)
+
+if current_directory not in sys.path:
+    sys.path.append(current_directory)
 
 import functions.math_utils as math_utils
+
+os.chdir(current_directory)
 
 #%% import features
 
@@ -97,15 +111,7 @@ def build_3n_factorial(n_features:int) -> pd.DataFrame:
 
 #%% 2n
 
-df = pd.DataFrame(dexpy.factorial.build_full_factorial(len(feature_names['cont'])),
-                    columns=feature_names['cont']
-                    )
-df.columns = feature_names['cont']
-for feature in feature_names['cont']:
-    df[feature] = rescalers[feature].reverse_transform(df[feature])
-
-math_utils.rescale()
-
+df = doepy.build.full_fact(feature_levels['cont'])
 if has_cont & has_cat:
     designs['2n'] = add_categorical(feature_levels['cat'],df)
 
@@ -137,13 +143,9 @@ designs['3n'].reset_index(drop=True,inplace=True)
 
 #%% CCF and CCD
 
-for alpha,design in zip([1,'rotatable'],['CCF','CCD']):
+for face,design in zip(['ccf','ccc'],['CCF','CCD']):
 
-    df = dexpy.ccd.build_ccd(len(features['cont']),
-                            alpha=alpha)
-    df.columns = feature_names['cont']
-    for feature in feature_names['cont']:
-        df[feature] = rescalers[feature].reverse_transform(df[feature])
+    df = doepy.build.build_central_composite(feature_levels['cont'],face=face)
 
     if has_cont & has_cat:
         designs[design] = add_categorical(feature_levels['cat'],df)
@@ -170,6 +172,12 @@ elif has_cat:
     designs['BBD'] = pd.DataFrame()
 
 designs['BBD'].reset_index(drop=True,inplace=True)
+
+#%% Export as df
+
+with pd.ExcelWriter('Common_DoE_designs.xlsx', engine='openpyxl') as writer:
+    for design,df in designs.items():
+        df.to_excel(writer, sheet_name=design, index=False)
 
 # #%% LHS (not implemented since we have not yet implemented a method to include num_exp)
 

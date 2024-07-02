@@ -1,5 +1,5 @@
 library(AlgDesign) # generates Optimal Design DoE; chosen over skpr because this does not use repeats
-library(plyr) # merge df together
+library(rstudioapi)
 
 # naming convention
 # des: from design
@@ -11,16 +11,24 @@ library(plyr) # merge df together
 # CREATE OPTIMAL DESIGN #
 #########################
 
-terms = c('A','B','A:B','I(A^2)') # DEFINE_ME, define terms to be used in MLR model
+terms <- c('A','B','A:B','I(A^2)') # DEFINE_ME, define terms to be used in MLR model
 
 # reformat model into equation
-formula = paste('~',terms[1])
+formula <- paste('~',terms[1])
 for (t in terms[-1]){
-  formula = paste(formula,'+',t)
+  formula <- paste(formula,'+',t)
 }
-formula = as.formula(formula)
+formula <- as.formula(formula)
 
-extra_exp <- 1
+# prepare df of candidates where optimal design will pick from
+# can set manual levels (including categorical) by using A = c(0,1,2) or A = as.factor(c("High", "Med", "Low"))
+# DEFINE_ME
+df_candidates <- expand.grid(A = seq(40, 90, 5), # °C of elyte out of heater
+                            B = seq(40, 160, 5) # °C of hotplate
+                            )
+
+extra_exp <- 1 # DEFINE_ME
+criterion = 'I' # DEFINE_ME, I-optimal as default / recommended optimality
 des <- NULL
 
 while (is.null(des)) {
@@ -34,11 +42,8 @@ while (is.null(des)) {
                criterion = criterion
     )
   }, error = function(e) {
-    # Print an error message with extra_exp value
     cat("Error encountered with extra_exp =", extra_exp, ":", e$message, "\n")
-    # Increment extra_exp
     extra_exp <<- extra_exp + 1  # Use <<- to update extra_exp globally
-    # Return NULL to indicate failure
     NULL
   })
 }
@@ -47,8 +52,12 @@ while (is.null(des)) {
 # run model.matrix(formula,df_candidates) and check how many columns are in the matrix
 
 # plot(des$design) # optional, show distribution of points
-df_optim_des = des$design # df of experiments
+df_optim_des <- des$design # df of experiments
 
 # export data
-write.csv(df_optim_des,"OptimalDesign.csv")
+doc_context <- getActiveDocumentContext()
+doc_path <- doc_context$path
+doc_dir <- dirname(doc_path)
 
+output_file <- file.path(doc_dir, "OptimalDesign.csv")
+write.csv(df_optim_des, file = output_file)
