@@ -12,6 +12,7 @@ from typing import Dict
 import doepy.build
 import os
 import sys
+import copy
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 parent_directory = os.path.dirname(current_directory)
@@ -145,10 +146,10 @@ designs['3n'].reset_index(drop=True,inplace=True)
 
 for face,design in zip(['ccf','ccc'],['CCF','CCD']):
 
-    df = doepy.build.build_central_composite(feature_levels['cont'],face=face)
+    df = doepy.build.build_central_composite(copy.deepcopy(feature_levels['cont']),face=face)
 
     if has_cont & has_cat:
-        designs[design] = add_categorical(feature_levels['cat'],df)
+        designs[design] = add_categorical(feature_levels['cat'].copy(),df)
 
     elif has_cont:
         designs[design] = df.copy()
@@ -160,18 +161,22 @@ for face,design in zip(['ccf','ccc'],['CCF','CCD']):
 
 #%% BBD
 
-df = doepy.build.box_behnken(feature_levels['cont'])
+if len(feature_levels['cont']) >= 3:
 
-if has_cont & has_cat:
-    designs['BBD'] = add_categorical(feature_levels['cat'],df)
+    df = doepy.build.box_behnken(copy.deepcopy(feature_levels['cont']))
 
-elif has_cont:
-    designs['BBD'] = df.copy()
-    
-elif has_cat:
-    designs['BBD'] = pd.DataFrame()
+    if has_cont & has_cat:
+        designs['BBD'] = add_categorical(feature_levels['cat'],df)
 
-designs['BBD'].reset_index(drop=True,inplace=True)
+    elif has_cont:
+        designs['BBD'] = df.copy()
+        
+    elif has_cat:
+        designs['BBD'] = pd.DataFrame()
+
+    designs['BBD'].reset_index(drop=True,inplace=True)
+else:
+    designs['BBD'] = pd.DataFrame(columns=['No BBD was made because countinuous features < 3'])
 
 #%% Export as df
 
