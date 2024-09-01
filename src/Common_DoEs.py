@@ -4,9 +4,6 @@
 
 import pandas as pd
 import numpy as np
-import dexpy
-import dexpy.factorial
-import dexpy.ccd
 import itertools
 from typing import Dict
 import doepy.build
