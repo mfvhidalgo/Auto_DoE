@@ -29,7 +29,7 @@ The script can be either manually downlaoded from Github or installed via Git.
 * open Git bash
 * enter
 ```
-git clone https://github.com/mfvhidalgo/ML
+git clone https://github.com/mfvhidalgo/Auto_DoE
 ```
 
 # Running the script
